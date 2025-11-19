@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <!-- Viktig meta-tagg för mobiler -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Inköpsresan - XLENT</title>
+    <style>
+        * {
+            box-sizing: border-box; 
+        }
+        body {
+            font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #e0e0e0;
+            overflow: hidden;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent; 
+        }
+        .game-container {
+            background: #1e1e1e;
+            width: 100%;
+            max-width: 850px;
+            height: auto;
+            max-height: 100vh;
+            padding: 25px; /* Grund-padding */
+            border-radius: 10px;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.9);
+            text-align: center;
+            border: 1px solid #333;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* TOP BAR */
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #252526; padding: 10px; border-radius: 6px; border: 1px solid #3e3e42; transition: all 0.5s;
+            font-size: 0.9rem;
+        }
+        .top-bar.automated { border-color: #2ecc71; box-shadow: 0 0 15px rgba(46, 204, 113, 0.2); }
+
+        .date-display { font-family: monospace; font-size: 1.2em; color: #61dafb; font-weight: bold; width: 90px; text-align: left; }
+        
+        .trust-container { flex: 1; margin: 0 10px; text-align: left; }
+        .trust-label { font-size: 0.6em; color: #999; display: block; margin-bottom: 2px; text-transform: uppercase; }
+        .trust-track { width: 100%; height: 8px; background: #000; border-radius: 4px; overflow: hidden; border: 1px solid #555; }
+        .trust-fill { height: 100%; width: 100%; background: #2ecc71; transition: width 0.3s, background 0.3s; }
+        
+        .score-display { font-size: 1em; font-weight: bold; color: #2ecc71; width: auto; text-align: right; min-width: 80px; }
+
+        /* TIMER */
+        .round-timer-container { width: 100%; height: 4px; background: #333; border-radius: 2px; overflow: hidden; }
+        .round-timer-fill { height: 100%; width: 100%; background: #e74c3c; transition: width 0.1s linear; }
+        .automated .round-timer-fill { background: #2ecc71; }
+
+        /* CARDS AREA */
+        .comparison-area { 
+            display: flex; 
+            gap: 15px; 
+            flex: 1; 
+            min-height: 0; 
+        }
+        .card { 
+            flex: 1; padding: 15px; border-radius: 6px; 
+            position: relative; display: flex; flex-direction: column; justify-content: flex-start; text-align: left; transition: all 0.2s;
+        }
+        .card.invoice { background: #fff; color: #000; border-top: 5px solid #e67e22; font-family: 'Courier New', monospace; }
+        .card.contract { background: #f0f2f5; color: #2c3e50; border-top: 5px solid #2980b9; }
+        .card.contract.blind { background: #2c2c2c; color: #777; border-top: 5px solid #555; display: flex; align-items: center; justify-content: center; text-align: center; }
+
+        .card-title { font-size: 0.75em; font-weight: 900; text-transform: uppercase; color: #7f8c8d; margin-bottom: 10px; border-bottom: 2px solid #eee; padding-bottom: 5px; display: flex; justify-content: space-between; width: 100%; }
+        .data-group { margin-bottom: 10px; width: 100%; }
+        .lbl { font-size: 0.6em; color: #888; display: block; text-transform: uppercase; margin-bottom: 2px; }
+        .val { font-size: 1em; font-weight: bold; line-height: 1.1; word-break: break-word; min-height: 1.1em; }
+        .price-val { font-size: 1.6em; font-weight: 900; text-align: right; margin-top: auto; width: 100%; }
+
+        /* CONTROLS */
+        .controls { display: flex; gap: 15px; margin-top: 5px; padding-bottom: 10px;}
+        button { flex: 1; padding: 15px; font-size: 1em; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; color: white; transition: transform 0.1s; touch-action: manipulation; }
+        .btn-dispute { background: #c0392b; box-shadow: 0 4px 0 #7b241c; }
+        .btn-approve { background: #27ae60; box-shadow: 0 4px 0 #196f3d; }
+        button:active { transform: translateY(3px); box-shadow: none; }
+        button:disabled { opacity: 0.3; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* AUTO BADGE */
+        .auto-badge {
+            position: absolute; top: -12px; right: 10px; background: #2ecc71; color: #1e1e1e; padding: 4px 12px; font-size: 0.8em; font-weight: bold; border-radius: 20px; box-shadow: 0 0 10px #2ecc71; display: none; z-index: 50; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); } 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
+
+        /* FEEDBACK */
+        .feedback {
+            position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 3em; font-weight: 900; text-shadow: 0 5px 15px rgba(0,0,0,0.9);
+            opacity: 0; pointer-events: none; z-index: 100; white-space: nowrap; width: 100%; text-align: center;
+        }
+        .anim-pop { animation: pop 0.6s ease-out forwards; }
+        @keyframes pop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); } }
+
+        /* SCREENS */
+        .overlay-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(18, 18, 18, 0.98); z-index: 200;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border-radius: 10px; padding: 20px; box-sizing: border-box; text-align: center;
+            overflow-y: auto; 
+        }
+        .overlay-screen h1 { margin: 0 0 15px 0; font-size: 2em; color: #61dafb; line-height: 1.2; }
+        .overlay-screen p { font-size: 1em; max-width: 600px; line-height: 1.5; margin-bottom: 20px; color: #ccc; }
+        
+        .btn-start, .btn-transform { width: 100%; max-width: 300px; padding: 15px; margin-top: 10px; }
+        .btn-start { background: #3498db; box-shadow: 0 5px 0 #21618c; }
+        .btn-transform { background: #9b59b6; box-shadow: 0 5px 0 #8e44ad; }
+
+        /* SETUP SCREEN - RESPONSIVE */
+        .setup-container {
+            display: flex; gap: 20px; width: 100%; height: 100%; align-items: center; justify-content: center;
+            flex-wrap: wrap;
+        }
+        .modules-rack {
+            display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 300px;
+        }
+        .draggable-module {
+            background: #333; border: 1px solid #555; padding: 15px; border-radius: 8px; cursor: pointer;
+            display: flex; align-items: center; gap: 15px; font-weight: bold; color: white;
+            transition: transform 0.2s, background 0.2s; font-size: 0.9em;
+            touch-action: manipulation;
+        }
+        .draggable-module:active { transform: scale(0.95); background: #444; }
+        .draggable-module.installed { opacity: 0.3; pointer-events: none; text-decoration: line-through; border-color: #2ecc71; }
+
+        .drop-zone {
+            width: 100%; max-width: 300px; height: 200px; border: 3px dashed #555; border-radius: 12px;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: rgba(255,255,255,0.05); transition: all 0.3s;
+        }
+        .drop-zone.complete { border-color: #2ecc71; background: rgba(46, 204, 113, 0.1); border-style: solid; }
+        .install-progress { font-size: 1.2em; font-weight: bold; margin-top: 10px; color: #ccc; }
+
+        /* --- MOBILE MEDIA QUERIES --- */
+        @media (max-width: 768px) {
+            .game-container {
+                /* Ökad padding för mobiler för att det inte ska ligga mot kanten */
+                padding: 25px; 
+                border-radius: 0;
+                height: 100vh;
+                border: none;
+                justify-content: space-between; 
+            }
+            .comparison-area {
+                flex-direction: column; 
+                height: auto;
+                overflow-y: auto; 
+                gap: 10px;
+            }
+            .card {
+                min-height: auto;
+                padding: 12px;
+            }
+            .price-val {
+                font-size: 1.4em;
+            }
+            .val {
+                font-size: 0.9em;
+            }
+            .setup-container {
+                flex-direction: column;
+            }
+            .modules-rack {
+                order: 2; 
+            }
+            .drop-zone {
+                order: 1;
+                height: 120px; 
+            }
+            .feedback {
+                font-size: 2.5em;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    
+    <div class="auto-badge" id="autoBadge">SYSTEMSTÖD AKTIVERAT</div>
+
+    <!-- Top Bar -->
+    <div class="top-bar" id="topBar">
+        <div class="date-display" id="dateDisplay">JAN 2025</div>
+        <div class="trust-container">
+            <span class="trust-label">Förtroende</span>
+            <div class="trust-track">
+                <div class="trust-fill" id="trustBar"></div>
+            </div>
+        </div>
+        <div class="score-display" id="scoreDisplay">0 kr</div>
+    </div>
+
+    <!-- Timer -->
+    <div class="round-timer-container">
+        <div class="round-timer-fill" id="roundTimerBar"></div>
+    </div>
+
+    <!-- Cards -->
+    <div class="comparison-area">
+        <div class="card invoice">
+            <div class="card-title"><span>Lev. Faktura</span><span>#F-2025</span></div>
+            <div class="data-group">
+                <span class="lbl">Beskrivning</span>
+                <span class="val" id="invItem">---</span>
+            </div>
+            <div class="data-group">
+                <span class="lbl">SKU</span>
+                <span class="val" id="invSku" style="color:#777; font-style:italic;">(Saknas)</span>
+            </div>
+            <div class="price-val" id="invPrice">---</div>
+        </div>
+
+        <div class="card contract" id="contractCard">
+            <div id="contractContent" style="width:100%; display:flex; flex-direction:column; height:100%;">
+                <div class="card-title"><span>Avtalsdatabas</span><span>MASTER</span></div>
+                <div class="data-group">
+                    <span class="lbl">Avtalad Produkt</span>
+                    <span class="val" id="conItem">---</span>
+                </div>
+                <div class="data-group">
+                    <span class="lbl">Avtalat SKU</span>
+                    <span class="val" id="conSku">---</span>
+                </div>
+                <div class="price-val" id="conPrice">---</div>
+            </div>
+            <div id="blindContent" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%; min-height: 100px;">
+                <p style="color:#e74c3c; font-weight:bold; font-size:1.5em; margin:0;">⚠ SAKNAS</p>
+                <p style="margin:5px 0 0 0; font-size:0.9em;">Ingen matchning</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-dispute" id="btnDispute" onclick="playerInput('dispute')">⛔ Bestrid</button>
+        <button class="btn-approve" id="btnApprove" onclick="playerInput('approve')">✅ Godkänn</button>
+    </div>
+
+    <div id="feedback" class="feedback"></div>
+
+    <!-- 1. START SCREEN -->
+    <div id="startScreen" class="overlay-screen">
+        <h1>INKÖPSANALYSEN 2025</h1>
+        <p>
+            Du tar över en avdelning i kris. Leverantörsfakturor stämmer inte och företaget läcker pengar.
+            Ditt uppdrag är att granska allt manuellt.
+        </p>
+        <p style="font-size:0.9em; color:#888;">Varning: Datan är bristfällig och tiden är knapp.</p>
+        <button class="btn-start" onclick="startGame(false)">Starta Verksamhetsåret</button>
+    </div>
+
+    <!-- 2. MANUAL END SCREEN -->
+    <div id="endScreen" class="overlay-screen" style="display:none;">
+        <h1 id="endTitle" style="color:#e74c3c">KAOS</h1>
+        <p id="endReason">Det manuella arbetet höll inte.</p>
+        
+        <div style="background:#333; padding:15px; border-radius:8px; margin-bottom:20px; width: 100%;">
+            <p style="margin:0; color:#aaa; font-size:0.9em;">MANUELLT RESULTAT:</p>
+            <div id="finalScore" style="font-size: 2em; font-weight:900; color:#f39c12; margin: 5px 0;">0 kr</div>
+        </div>
+
+        <p style="font-size: 0.9em; color: #ccc; max-width: 600px;">
+            Du missade majoriteten av felen för att data saknades eller tiden tog slut. Det måste finnas ett bättre sätt.
+        </p>
+
+        <button class="btn-transform" onclick="goToSetup()">🚀 Förändra Inköpsprocessen</button>
+    </div>
+
+    <!-- 3. SETUP SCREEN (CLICK/DRAG HYBRID) -->
+    <div id="setupScreen" class="overlay-screen" style="display:none;">
+        <h1>BYGG DIN LÖSNING</h1>
+        <p style="font-size:0.9em;">Klicka på (eller dra) modulerna till installationszonen.</p>
+        
+        <div class="setup-container">
+            <!-- Modules (Clickable for mobile, Draggable for desktop) -->
+            <div class="modules-rack">
+                <div class="draggable-module" draggable="true" id="mod-1" ondragstart="drag(event)" onclick="manualInstall('mod-1')">
+                    <span>📦</span> Inköpssystem
+                </div>
+                <div class="draggable-module" draggable="true" id="mod-2" ondragstart="drag(event)" onclick="manualInstall('mod-2')">
+                    <span>🧹</span> Datakvalitet: prislistor och fakturor
+                </div>
+                <div class="draggable-module" draggable="true" id="mod-3" ondragstart="drag(event)" onclick="manualInstall('mod-3')">
+                    <span>🎓</span> Utbildning av personal
+                </div>
+            </div>
+
+            <!-- Drop Zone -->
+            <div class="drop-zone" id="dropZone" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="leaveDrop(event)">
+                <div style="font-size:2.5em;">⬇️</div>
+                <div style="font-size:0.8em;">INSTALLERA HÄR</div>
+                <div class="install-progress" id="installProgress">0 / 3</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. AUTOMATED SUCCESS SCREEN -->
+    <div id="autoEndScreen" class="overlay-screen" style="display:none;">
+        <h1 style="color:#2ecc71;">TRANSFORMATION KLAR</h1>
+        <p>Systemet hanterade hela året automatiskt – helt utan felaktigheter.</p>
+        
+        <div style="background:#333; padding:15px; border-radius:8px; margin-bottom:20px; width: 100%;">
+            <p style="margin:0; color:#aaa; font-size:0.9em;">AUTOMATISERAD BESPARING:</p>
+            <div id="autoScore" style="font-size: 2.5em; font-weight:900; color:#2ecc71; margin: 5px 0;">0 kr</div>
+            <p style="margin:0; color:#aaa; font-size:0.8em;">100% AV RADERNA GRANSKADE</p>
+        </div>
+
+        <p style="font-size: 0.9em; color: #ccc; max-width: 600px; line-height: 1.6;">
+            Inga gissningar. Inga missade fakturor. Full kontroll från dag ett.
+            <br><br>
+            <strong style="color:#fff">Vi på XLENT kan hjälpa dig och din organisation med detta.</strong><br>
+            Hör av dig till din kontakt så bokar vi ett möte och berättar mer.
+        </p>
+
+        <button class="btn-start" onclick="location.reload()">🔄 Starta om demon</button>
+    </div>
+
+</div>
+
+<script>
+    /* --- CONFIG --- */
+    const ROUND_TIME_MANUAL = 10000; 
+    const YEAR_DURATION_MANUAL = 60000; 
+    
+    const AUTO_GAME_DURATION = 12000; 
+    const ROUND_TIME_AUTO = 800; 
+
+    const MAX_TRUST = 100;
+
+    const items = [
+        { name: "Konsult Senior Java", sku: "IT-CON-SR", price: 1250000 },
+        { name: "Licens Office 365 E5", sku: "MS-LIC-E5", price: 850000 },
+        { name: "Serverrack HPE ProLiant", sku: "HW-SRV-RK", price: 450000 },
+        { name: "Elförbrukning Fabrik", sku: "UTIL-EL-HQ", price: 2100000 },
+        { name: "Facility Städtjänst", sku: "FAC-CLN-01", price: 620000 },
+        { name: "Logistik Container 40ft", sku: "LOG-CN-40", price: 320000 },
+        { name: "Marknadsföring Ads", sku: "MKT-DIG-AD", price: 950000 },
+        { name: "Juridisk Rådgivning", sku: "LGL-ADV-HR", price: 150000 },
+        { name: "Laptops Dell Batch", sku: "HW-LP-DL5", price: 1800000 },
+        { name: "Säkerhetssystem Cams", sku: "SEC-CAM-SYS", price: 550000 }
+    ];
+
+    /* --- STATE --- */
+    let gameActive = false;
+    let isAutomated = false;
+    let gameStartTime;
+    let trust = MAX_TRUST;
+    let savings = 0;
+    let roundsPlayed = 0;
+    let currentRound = {};
+    let installedCount = 0; 
+    
+    // Timers
+    let roundTimerStart;
+    let roundAnimationFrame;
+    let globalAnimationFrame;
+    let autoPlayTimeout;
+
+    /* --- UI REFS --- */
+    const ui = {
+        startScreen: document.getElementById('startScreen'),
+        endScreen: document.getElementById('endScreen'),
+        setupScreen: document.getElementById('setupScreen'),
+        autoEndScreen: document.getElementById('autoEndScreen'),
+        
+        endTitle: document.getElementById('endTitle'),
+        endReason: document.getElementById('endReason'),
+        finalScore: document.getElementById('finalScore'),
+        autoScore: document.getElementById('autoScore'),
+
+        dropZone: document.getElementById('dropZone'),
+        installProgress: document.getElementById('installProgress'),
+        
+        topBar: document.getElementById('topBar'),
+        autoBadge: document.getElementById('autoBadge'),
+        date: document.getElementById('dateDisplay'),
+        trustBar: document.getElementById('trustBar'),
+        score: document.getElementById('scoreDisplay'),
+        timerBar: document.getElementById('roundTimerBar'),
+        feedback: document.getElementById('feedback'),
+        
+        btnDispute: document.getElementById('btnDispute'),
+        btnApprove: document.getElementById('btnApprove'),
+        
+        invItem: document.getElementById('invItem'),
+        invSku: document.getElementById('invSku'),
+        invPrice: document.getElementById('invPrice'),
+        contractCard: document.getElementById('contractCard'),
+        contractContent: document.getElementById('contractContent'),
+        blindContent: document.getElementById('blindContent'),
+        conItem: document.getElementById('conItem'),
+        conSku: document.getElementById('conSku'),
+        conPrice: document.getElementById('conPrice')
+    };
+
+    function formatMoney(val) { return val.toLocaleString('sv-SE') + " kr"; }
+
+    /* --- DRAG & DROP / CLICK LOGIC --- */
+    function allowDrop(ev) {
+        ev.preventDefault();
+        ui.dropZone.style.borderColor = "#61dafb";
+    }
+    function leaveDrop(ev) {
+        ui.dropZone.style.borderColor = "#555";
+    }
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+    }
+    function drop(ev) {
+        ev.preventDefault();
+        ui.dropZone.style.borderColor = "#555";
+        var data = ev.dataTransfer.getData("text");
+        installModuleLogic(data);
+    }
+    
+    // Fallback för mobil/klick
+    function manualInstall(id) {
+        installModuleLogic(id);
+    }
+
+    function installModuleLogic(id) {
+        const module = document.getElementById(id);
+        if(module && !module.classList.contains('installed')) {
+            module.classList.add('installed');
+            module.innerHTML = "✅ Installerad";
+            installedCount++;
+            ui.installProgress.innerText = installedCount + " / 3";
+
+            // Visual Feedback
+            ui.dropZone.style.borderColor = "#2ecc71";
+            ui.dropZone.style.backgroundColor = "rgba(46, 204, 113, 0.1)";
+            setTimeout(() => {
+                ui.dropZone.style.borderColor = "#555";
+                ui.dropZone.style.backgroundColor = "rgba(255,255,255,0.05)";
+            }, 300);
+
+            if(installedCount === 3) {
+                ui.dropZone.classList.add('complete');
+                ui.dropZone.innerHTML = "<div style='font-size:3em'>🚀</div><div>SYSTEM REDO</div>";
+                setTimeout(() => startGame(true), 1000);
+            }
+        }
+    }
+
+
+    /* --- GAME ENGINE --- */
+
+    function startGame(automatedMode) {
+        isAutomated = automatedMode;
+        gameActive = true;
+        trust = MAX_TRUST;
+        savings = 0;
+        roundsPlayed = 0;
+        gameStartTime = Date.now();
+
+        ui.startScreen.style.display = 'none';
+        ui.endScreen.style.display = 'none';
+        ui.setupScreen.style.display = 'none';
+        ui.autoEndScreen.style.display = 'none';
+
+        if (isAutomated) {
+            ui.autoBadge.style.display = 'block';
+            ui.topBar.classList.add('automated');
+            ui.btnDispute.disabled = true;
+            ui.btnApprove.disabled = true;
+            ui.date.innerText = "JAN 2026";
+        } else {
+            ui.autoBadge.style.display = 'none';
+            ui.topBar.classList.remove('automated');
+            ui.btnDispute.disabled = false;
+            ui.btnApprove.disabled = false;
+        }
+
+        updateTrustUI();
+        ui.score.innerText = "0 kr";
+
+        globalLoop();
+        nextRound();
+    }
+
+    function goToSetup() {
+        ui.endScreen.style.display = 'none';
+        ui.setupScreen.style.display = 'flex';
+        installedCount = 0;
+        ui.installProgress.innerText = "0 / 3";
+        // Återställ moduler om man spelar om
+        document.querySelectorAll('.draggable-module').forEach(el => {
+            el.classList.remove('installed');
+            // Reset text based on ID
+            if(el.id === "mod-1") el.innerHTML = "<span>📦</span> Inköpssystem";
+            if(el.id === "mod-2") el.innerHTML = "<span>🧹</span> Datakvalitet: prislistor och fakturor";
+            if(el.id === "mod-3") el.innerHTML = "<span>🎓</span> Utbildning av personal";
+        });
+        ui.dropZone.innerHTML = "<div style='font-size:2.5em;'>⬇️</div><div style='font-size:0.8em;'>INSTALLERA HÄR</div><div class='install-progress' id='installProgress'>0 / 3</div>";
+        ui.installProgress = document.getElementById('installProgress'); // Refresh ref
+        ui.dropZone.classList.remove('complete');
+    }
+
+    function stopGame(reason) {
+        gameActive = false;
+        cancelAnimationFrame(roundAnimationFrame);
+        cancelAnimationFrame(globalAnimationFrame);
+        clearTimeout(autoPlayTimeout);
+
+        if (isAutomated) {
+            ui.autoScore.innerText = formatMoney(savings);
+            ui.autoEndScreen.style.display = 'flex';
+        } else {
+            if (reason === 'fired') {
+                ui.endTitle.innerText = "DU FICK SPARKEN";
+                ui.endTitle.style.color = "#e74c3c";
+                ui.endReason.innerText = "Förtroendet tog slut.";
+            } else {
+                ui.endTitle.innerText = "BOKSLUT 2025";
+                ui.endTitle.style.color = "#f39c12";
+                ui.endReason.innerText = "Manuellt arbete räcker inte till.";
+            }
+            ui.finalScore.innerText = formatMoney(savings);
+            ui.endScreen.style.display = 'flex';
+        }
+    }
+
+    function globalLoop() {
+        if (!gameActive) return;
+        
+        const duration = isAutomated ? AUTO_GAME_DURATION : YEAR_DURATION_MANUAL;
+        const progress = (Date.now() - gameStartTime) / duration;
+        
+        const months = ["JAN", "FEB", "MAR", "APR", "MAJ", "JUN", "JUL", "AUG", "SEP", "OKT", "NOV", "DEC"];
+        const year = isAutomated ? "2026" : "2025";
+        
+        ui.date.innerText = `${months[Math.min(Math.floor(progress * 12), 11)]} ${year}`;
+
+        if (progress >= 1) stopGame('completed');
+        else globalAnimationFrame = requestAnimationFrame(globalLoop);
+    }
+
+    function updateRoundTimer() {
+        if (!gameActive) return;
+        
+        const maxTime = isAutomated ? ROUND_TIME_AUTO : ROUND_TIME_MANUAL;
+        const elapsed = Date.now() - roundTimerStart;
+        const remaining = maxTime - elapsed;
+        
+        ui.timerBar.style.width = Math.max(0, (remaining / maxTime) * 100) + "%";
+
+        if (remaining <= 0 && !isAutomated) {
+            applyDamage(15);
+            showFeedback("TIDEN UTE", "#e74c3c");
+            setTimeout(nextRound, 500);
+        } else if (!isAutomated) {
+            roundAnimationFrame = requestAnimationFrame(updateRoundTimer);
+        }
+    }
+
+    function nextRound() {
+        if (!gameActive) return;
+        roundsPlayed++;
+        cancelAnimationFrame(roundAnimationFrame);
+
+        const item = items[Math.floor(Math.random() * items.length)];
+        
+        let invName = item.name;
+        let invPrice = item.price;
+        let invSku = item.sku;
+        let hasSku = true;
+        let isBlind = false;
+        let hasError = false;
+        let potentialSaving = 0;
+
+        if (isAutomated) {
+            // Perfect world
+            hasSku = true;
+            isBlind = false;
+            hasError = false; 
+        } else {
+            isBlind = Math.random() < 0.15;
+            hasSku = Math.random() > 0.8; 
+            hasError = Math.random() > 0.5; 
+            
+            if (hasError) {
+                const markup = Math.round(item.price * 0.2);
+                invPrice += markup;
+                potentialSaving = markup;
+            }
+
+            if (Math.random() > 0.4) invName = invName.toUpperCase();
+            if (Math.random() > 0.7) invName = invName.substring(0, 12) + "...";
+        }
+
+        currentRound = {
+            isBlind: isBlind,
+            shouldDispute: hasError,
+            saving: potentialSaving
+        };
+
+        ui.invItem.innerText = invName;
+        ui.invPrice.innerText = formatMoney(invPrice);
+        
+        if (hasSku) {
+            ui.invSku.innerText = invSku;
+            ui.invSku.style.color = isAutomated ? "#2ecc71" : "#000"; 
+            ui.invSku.style.fontStyle = "normal";
+        } else {
+            ui.invSku.innerText = "(Saknas)";
+            ui.invSku.style.color = "#777";
+            ui.invSku.style.fontStyle = "italic";
+        }
+
+        if (isBlind) {
+            ui.contractCard.classList.add('blind');
+            ui.contractContent.style.display = 'none';
+            ui.blindContent.style.display = 'flex';
+        } else {
+            ui.contractCard.classList.remove('blind');
+            ui.contractContent.style.display = 'flex';
+            ui.blindContent.style.display = 'none';
+            ui.conItem.innerText = item.name;
+            ui.conSku.innerText = item.sku;
+            ui.conPrice.innerText = formatMoney(item.price);
+        }
+
+        roundTimerStart = Date.now();
+        if(!isAutomated) updateRoundTimer();
+        else ui.timerBar.style.width = "100%"; 
+
+        if (isAutomated) {
+            autoPlayLogic();
+        }
+    }
+
+    function autoPlayLogic() {
+        const delay = 300 + Math.random() * 300; 
+        autoPlayTimeout = setTimeout(() => {
+            playerInput('approve'); 
+        }, delay);
+    }
+
+    function playerInput(action) {
+        if (!gameActive) return;
+        cancelAnimationFrame(roundAnimationFrame);
+
+        let isWin = false;
+        let msg = "";
+        let color = "";
+
+        if (isAutomated) {
+            isWin = true;
+            msg = "AUTO-MATCH";
+            color = "#2ecc71";
+            savings += Math.round(250000 + Math.random() * 50000); 
+        } else {
+            if (currentRound.isBlind) {
+                isWin = Math.random() > 0.5;
+                if (isWin) { msg = "TUR!"; color = "#f1c40f"; if (currentRound.shouldDispute && action === 'dispute') savings += currentRound.saving; }
+                else { msg = "OTUR!"; color = "#e74c3c"; applyDamage(20); }
+            } else {
+                if (action === 'dispute') {
+                    if (currentRound.shouldDispute) { isWin = true; savings += currentRound.saving; msg = "SPARAT!"; color = "#2ecc71"; }
+                    else { isWin = false; applyDamage(10); msg = "FEL!"; color = "#e74c3c"; }
+                } else {
+                    if (currentRound.shouldDispute) { isWin = false; applyDamage(25); msg = "MISSADE FEL!"; color = "#e74c3c"; }
+                    else { isWin = true; msg = "GODKÄNT"; color = "#3498db"; }
+                }
+            }
+        }
+
+        if (isWin) trust = Math.min(trust + 5, MAX_TRUST);
+        updateTrustUI();
+        ui.score.innerText = formatMoney(savings);
+        showFeedback(msg, color);
+
+        if (gameActive) {
+            setTimeout(nextRound, isAutomated ? 100 : 500);
+        }
+    }
+
+    function applyDamage(amount) {
+        trust -= amount;
+        if (trust <= 0) {
+            trust = 0;
+            updateTrustUI();
+            stopGame('fired');
+        } else updateTrustUI();
+    }
+
+    function updateTrustUI() {
+        ui.trustBar.style.width = trust + "%";
+        if (trust > 50) ui.trustBar.style.background = "#2ecc71";
+        else if (trust > 25) ui.trustBar.style.background = "#f39c12";
+        else ui.trustBar.style.background = "#e74c3c";
+    }
+
+    function showFeedback(text, color) {
+        ui.feedback.innerText = text;
+        ui.feedback.style.color = color;
+        ui.feedback.classList.remove('anim-pop');
+        void ui.feedback.offsetWidth; 
+        ui.feedback.classList.add('anim-pop');
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (!gameActive || isAutomated) return;
+        if (e.key === "ArrowLeft") playerInput('dispute');
+        if (e.key === "ArrowRight") playerInput('approve');
+    });
+
+</script>
+</body>
+</html>
