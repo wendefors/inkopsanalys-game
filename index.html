@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <!-- Viewport-inställning för maximal kompatibilitet -->
+    <!-- Viewport-inställning för maximal kompatibilitet på mobiler -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Inköpsresan - XLENT</title>
     <style>
@@ -15,18 +15,17 @@
         body {
             font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
             background-color: #121212;
-            /* Använd flex för att centrera, men tillåt scroll om det behövs */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh; /* Fallback */
-            min-height: 100dvh; /* Modern fix för mobila webbläsare */
+            min-height: 100vh; 
+            min-height: 100dvh; 
             margin: 0;
             padding: 0;
             color: #e0e0e0;
-            overflow-x: hidden; /* Ingen sidoscroll */
-            overflow-y: auto;   /* Tillåt vertikal scroll vid behov */
+            overflow-x: hidden; 
+            overflow-y: auto;   
             -webkit-tap-highlight-color: transparent; 
         }
 
@@ -34,24 +33,19 @@
             background: #1e1e1e;
             width: 100%;
             max-width: 850px;
-            /* Låt höjden anpassa sig efter innehållet, men fyll minst skärmen på mobil */
             min-height: 100dvh; 
-            
-            /* Padding: Säkerhetsmarginal för notch/statusfält */
             padding: 20px;
             padding-top: max(20px, env(safe-area-inset-top)); 
             padding-bottom: max(20px, env(safe-area-inset-bottom));
-            
             box-shadow: 0 0 50px rgba(0,0,0,0.5);
             text-align: center;
             position: relative;
             display: flex;
             flex-direction: column;
-            justify-content: space-between; /* Sprid ut innehållet */
+            justify-content: space-between;
             gap: 10px;
         }
 
-        /* Desktop-specifik: Snyggare inramad box */
         @media (min-width: 769px) {
             body {
                 padding: 20px;
@@ -91,7 +85,7 @@
         .comparison-area { 
             display: flex; 
             gap: 15px; 
-            flex: 1; /* Ta upp allt ledigt utrymme */
+            flex: 1; 
             flex-direction: row;
         }
         .card { 
@@ -131,32 +125,35 @@
         .anim-pop { animation: pop 0.6s ease-out forwards; }
         @keyframes pop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); } }
 
-        /* OVERLAY SCREENS (Fixed Overlay) */
+        /* OVERLAY SCREENS (Scrollable & Safe) */
         .overlay-screen {
-            position: fixed; /* Fixerad för att täcka hela skärmen */
+            position: fixed; /* Täcker hela viewporten */
             top: 0; left: 0; width: 100%; height: 100%;
             background: #1e1e1e; 
             z-index: 200;
+            
             display: flex; 
             flex-direction: column; 
             align-items: center;
-            justify-content: flex-start; /* Börja från toppen */
+            justify-content: flex-start; /* Startar från toppen för att undvika klippning */
+            
             text-align: center;
-            overflow-y: auto; /* Tillåt scroll inuti overlay */
+            overflow-y: auto; /* Scrollbar om innehållet är långt */
             -webkit-overflow-scrolling: touch;
+            
             padding: 25px;
-            padding-top: max(50px, env(safe-area-inset-top));
+            padding-top: max(60px, env(safe-area-inset-top)); /* Extra luft i toppen */
             padding-bottom: 50px;
         }
 
         .overlay-content {
             width: 100%;
             max-width: 600px;
-            margin: auto 0; 
+            margin: auto 0; /* Centrera vertikalt om plats finns */
         }
 
         .overlay-screen h1 { margin: 0 0 20px 0; font-size: 2em; color: #61dafb; line-height: 1.2; }
-        .overlay-screen p { font-size: 1.1em; line-height: 1.5; margin-bottom: 25px; color: #ccc; }
+        .overlay-screen p { font-size: 1.1em; line-height: 1.5; margin-bottom: 25px; color: #ccc; margin-left: auto; margin-right: auto; }
         
         .btn-start, .btn-transform { width: 100%; max-width: 300px; padding: 18px; margin-top: 10px; font-size: 1.1em; }
         .btn-start { background: #3498db; box-shadow: 0 5px 0 #21618c; }
@@ -176,7 +173,7 @@
             display: flex; align-items: center; gap: 15px; font-weight: bold; color: white;
             transition: transform 0.2s, background 0.2s; font-size: 0.95em;
             touch-action: manipulation;
-            text-align: left;
+            text-align: left; 
         }
         .draggable-module:active { transform: scale(0.95); background: #444; }
         .draggable-module.installed { opacity: 0.3; pointer-events: none; text-decoration: line-through; border-color: #2ecc71; }
@@ -194,14 +191,12 @@
             .game-container {
                 border-radius: 0;
                 border: none;
-                /* Säkerställ att vi inte tvingar in höjd som klipper */
                 height: auto;
                 min-height: 100dvh;
             }
             
             .comparison-area {
                 flex-direction: column; 
-                flex: 0 0 auto; /* Låt den ta den plats den behöver */
                 gap: 10px;
                 margin-bottom: 10px;
             }
@@ -212,9 +207,6 @@
                 justify-content: center;
             }
             
-            .card-title { margin-bottom: 5px; }
-            .data-group { margin-bottom: 5px; }
-
             /* Setup screen mobile adjustments */
             .setup-container { flex-direction: column; }
             .modules-rack { order: 2; }
@@ -304,7 +296,7 @@
         </div>
     </div>
 
-    <!-- 2. MANUAL END SCREEN -->
+    <!-- 2. MANUAL END SCREEN (KAOS) -->
     <div id="endScreen" class="overlay-screen" style="display:none;">
         <div class="overlay-content">
             <h1 id="endTitle" style="color:#e74c3c">KAOS</h1>
@@ -327,12 +319,18 @@
     <div id="setupScreen" class="overlay-screen" style="display:none;">
         <div class="overlay-content">
             <h1>BYGG DIN LÖSNING</h1>
-            <p style="font-size:0.9em;">Nu är det dags för ett bättre systemstöd för inköpen, förbättrad datakvalitet där artikelnummer återfinns på både fakturan och prislistan och en tydlig information och utbildning av personalen i det nya arbetssättet.<br> 
-                <br>
-                Klicka på (eller dra) modulerna till installationszonen.</p>
+            <p style="font-size:0.9em; margin-bottom: 10px;">Nu är det dags för:</p>
+            
+            <ul style="text-align: left; color: #ccc; margin-bottom: 20px; font-size: 0.95em; line-height: 1.6; padding-left: 20px; display: inline-block; max-width: 500px;">
+                <li>Ett bättre systemstöd för inköpen.</li>
+                <li>Förbättrad datakvalitet där artikelnummer återfinns på både fakturan och prislistan.</li>
+                <li>Tydlig information och utbildning av personalen i det nya arbetssättet.</li>
+            </ul>
+            
+            <p style="font-size:0.9em; margin-top: 10px;">Klicka på (eller dra) modulerna till installationszonen.</p>
             
             <div class="setup-container">
-                <!-- Modules (Clickable for mobile, Draggable for desktop) -->
+                <!-- Modules -->
                 <div class="modules-rack">
                     <div class="draggable-module" draggable="true" id="mod-1" ondragstart="drag(event)" onclick="manualInstall('mod-1')">
                         <span>📦</span> Inköpssystem
