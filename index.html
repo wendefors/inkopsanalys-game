@@ -2,50 +2,65 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <!-- Viktig meta-tagg för mobiler -->
+    <!-- Viewport-inställning för maximal kompatibilitet -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Inköpsresan - XLENT</title>
     <style>
         * {
             box-sizing: border-box; 
         }
+        html {
+            height: 100%;
+        }
         body {
             font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
             background-color: #121212;
+            /* Använd flex för att centrera, men tillåt scroll om det behövs */
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            height: 100vh;
+            justify-content: center;
+            min-height: 100vh; /* Fallback */
+            min-height: 100dvh; /* Modern fix för mobila webbläsare */
             margin: 0;
+            padding: 0;
             color: #e0e0e0;
-            overflow: hidden; /* Förhindrar scroll på själva bakgrunden */
-            user-select: none;
+            overflow-x: hidden; /* Ingen sidoscroll */
+            overflow-y: auto;   /* Tillåt vertikal scroll vid behov */
             -webkit-tap-highlight-color: transparent; 
         }
+
         .game-container {
             background: #1e1e1e;
             width: 100%;
             max-width: 850px;
-            height: 100%; /* Fyller höjden på mobil */
-            max-height: 100vh;
-            /* Grund-padding */
-            padding: 25px;
-            padding-top: max(25px, env(safe-area-inset-top)); 
-            border-radius: 10px;
-            box-shadow: 0 30px 80px rgba(0,0,0,0.9);
+            /* Låt höjden anpassa sig efter innehållet, men fyll minst skärmen på mobil */
+            min-height: 100dvh; 
+            
+            /* Padding: Säkerhetsmarginal för notch/statusfält */
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top)); 
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+            
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
             text-align: center;
-            border: 1px solid #333;
             position: relative;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            justify-content: space-between; /* Sprid ut innehållet */
+            gap: 10px;
         }
-        
-        /* Desktop-specifik justering för att behålla "kort"-känslan på stora skärmar */
+
+        /* Desktop-specifik: Snyggare inramad box */
         @media (min-width: 769px) {
+            body {
+                padding: 20px;
+            }
             .game-container {
+                min-height: auto;
                 height: auto;
-                min-height: 600px;
+                border-radius: 15px;
+                border: 1px solid #333;
             }
         }
 
@@ -54,7 +69,7 @@
             display: flex; justify-content: space-between; align-items: center;
             background: #252526; padding: 10px; border-radius: 6px; border: 1px solid #3e3e42; transition: all 0.5s;
             font-size: 0.9rem;
-            flex-shrink: 0; /* Förhindrar att denna krymper */
+            flex-shrink: 0;
         }
         .top-bar.automated { border-color: #2ecc71; box-shadow: 0 0 15px rgba(46, 204, 113, 0.2); }
 
@@ -76,9 +91,8 @@
         .comparison-area { 
             display: flex; 
             gap: 15px; 
-            flex: 1; 
-            min-height: 0; /* Viktigt för scroll inuti flex */
-            overflow-y: auto; /* Tillåt scroll om korten inte får plats */
+            flex: 1; /* Ta upp allt ledigt utrymme */
+            flex-direction: row;
         }
         .card { 
             flex: 1; padding: 15px; border-radius: 6px; 
@@ -95,8 +109,8 @@
         .price-val { font-size: 1.6em; font-weight: 900; text-align: right; margin-top: auto; width: 100%; }
 
         /* CONTROLS */
-        .controls { display: flex; gap: 15px; margin-top: 5px; padding-bottom: 10px; flex-shrink: 0; }
-        button { flex: 1; padding: 15px; font-size: 1em; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; color: white; transition: transform 0.1s; touch-action: manipulation; }
+        .controls { display: flex; gap: 15px; margin-top: 5px; padding-bottom: 0px; flex-shrink: 0; }
+        button { flex: 1; padding: 18px; font-size: 1em; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; color: white; transition: transform 0.1s; touch-action: manipulation; }
         .btn-dispute { background: #c0392b; box-shadow: 0 4px 0 #7b241c; }
         .btn-approve { background: #27ae60; box-shadow: 0 4px 0 #196f3d; }
         button:active { transform: translateY(3px); box-shadow: none; }
@@ -117,41 +131,32 @@
         .anim-pop { animation: pop 0.6s ease-out forwards; }
         @keyframes pop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); } }
 
-        /* SCREENS - FIXADE FÖR ATT VARA SOM VANLIGA SIDOR */
+        /* OVERLAY SCREENS (Fixed Overlay) */
         .overlay-screen {
-            position: absolute; 
+            position: fixed; /* Fixerad för att täcka hela skärmen */
             top: 0; left: 0; width: 100%; height: 100%;
-            background: #1e1e1e; /* Samma som container för sömlöshet */
+            background: #1e1e1e; 
             z-index: 200;
-            
-            /* FLEX men tillåter scroll */
             display: flex; 
             flex-direction: column; 
             align-items: center;
-            justify-content: flex-start; /* Börja från toppen, inte mitten */
-            
-            border-radius: 10px; 
+            justify-content: flex-start; /* Börja från toppen */
             text-align: center;
-            
-            /* Scroll management */
-            overflow-y: auto; 
+            overflow-y: auto; /* Tillåt scroll inuti overlay */
             -webkit-overflow-scrolling: touch;
-            
-            /* PADDING - Viktigt för mobiler */
-            padding: 20px;
-            padding-top: max(50px, env(safe-area-inset-top)); /* Rejäl padding i toppen */
+            padding: 25px;
+            padding-top: max(50px, env(safe-area-inset-top));
             padding-bottom: 50px;
         }
 
-        /* Innehålls-wrapper för att centrera snyggt om det finns plats */
         .overlay-content {
             width: 100%;
             max-width: 600px;
-            margin: auto 0; /* Försök centrera vertikalt om det går */
+            margin: auto 0; 
         }
 
-        .overlay-screen h1 { margin: 0 0 20px 0; font-size: 2.2em; color: #61dafb; line-height: 1.2; }
-        .overlay-screen p { font-size: 1.1em; line-height: 1.6; margin-bottom: 25px; color: #ccc; margin-left: auto; margin-right: auto; }
+        .overlay-screen h1 { margin: 0 0 20px 0; font-size: 2em; color: #61dafb; line-height: 1.2; }
+        .overlay-screen p { font-size: 1.1em; line-height: 1.5; margin-bottom: 25px; color: #ccc; }
         
         .btn-start, .btn-transform { width: 100%; max-width: 300px; padding: 18px; margin-top: 10px; font-size: 1.1em; }
         .btn-start { background: #3498db; box-shadow: 0 5px 0 #21618c; }
@@ -184,31 +189,32 @@
         .drop-zone.complete { border-color: #2ecc71; background: rgba(46, 204, 113, 0.1); border-style: solid; }
         .install-progress { font-size: 1.2em; font-weight: bold; margin-top: 10px; color: #ccc; }
 
-        /* --- MOBILE MEDIA QUERIES --- */
+        /* --- MOBILE OPTIMIZATION --- */
         @media (max-width: 768px) {
             .game-container {
-                padding: 15px; 
-                padding-top: max(20px, env(safe-area-inset-top));
                 border-radius: 0;
                 border: none;
-                height: 100vh; /* Lås höjden till viewport */
+                /* Säkerställ att vi inte tvingar in höjd som klipper */
+                height: auto;
+                min-height: 100dvh;
             }
             
-            .overlay-screen h1 { font-size: 1.8em; }
-            .overlay-screen p { font-size: 1em; }
-
             .comparison-area {
                 flex-direction: column; 
+                flex: 0 0 auto; /* Låt den ta den plats den behöver */
                 gap: 10px;
-                /* Se till att korten inte blir för små */
-                flex-grow: 1;
+                margin-bottom: 10px;
             }
+
             .card {
                 min-height: auto;
                 padding: 12px;
                 justify-content: center;
             }
             
+            .card-title { margin-bottom: 5px; }
+            .data-group { margin-bottom: 5px; }
+
             /* Setup screen mobile adjustments */
             .setup-container { flex-direction: column; }
             .modules-rack { order: 2; }
