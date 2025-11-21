@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
     <meta charset="UTF-8">
-    <!-- Viewport-inställning för maximal kompatibilitet -->
+    <!-- Viewport-inställning för maximal kompatibilitet på mobiler -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Inköpsresan - XLENT</title>
     <style>
@@ -15,17 +15,18 @@
         body {
             font-family: 'Segoe UI', 'Roboto', Helvetica, Arial, sans-serif;
             background-color: #121212;
+            /* Flexbox för centrering, men tillåt scroll */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh; 
-            min-height: 100dvh; 
+            min-height: 100dvh; /* Modern enhet för mobila webbläsare */
             margin: 0;
             padding: 0;
             color: #e0e0e0;
             overflow-x: hidden; 
-            overflow-y: auto;   
+            overflow-y: auto;   /* Tillåt vertikal scroll vid behov */
             -webkit-tap-highlight-color: transparent; 
         }
 
@@ -33,20 +34,24 @@
             background: #1e1e1e;
             width: 100%;
             max-width: 850px;
+            /* Fyller skärmen på mobil, anpassar sig på desktop */
             min-height: 100dvh; 
+            
+            /* Padding med hänsyn till notch/safe-areas */
             padding: 20px;
-            /* Extra padding i toppen för att hantera notch/flärp */
-            padding-top: max(25px, env(safe-area-inset-top)); 
+            padding-top: max(20px, env(safe-area-inset-top)); 
             padding-bottom: max(20px, env(safe-area-inset-bottom));
+            
             box-shadow: 0 0 50px rgba(0,0,0,0.5);
             text-align: center;
             position: relative;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: space-between; /* Sprid ut innehållet */
             gap: 10px;
         }
 
+        /* Desktop-specifik styling */
         @media (min-width: 769px) {
             body {
                 padding: 20px;
@@ -54,8 +59,10 @@
             .game-container {
                 min-height: auto;
                 height: auto;
+                min-height: 600px;
                 border-radius: 15px;
                 border: 1px solid #333;
+                padding: 30px;
             }
         }
 
@@ -65,8 +72,6 @@
             background: #252526; padding: 10px; border-radius: 6px; border: 1px solid #3e3e42; transition: all 0.5s;
             font-size: 0.9rem;
             flex-shrink: 0;
-            /* Lite marginal uppåt så den inte krockar med badge på mobil */
-            margin-top: 10px; 
         }
         .top-bar.automated { border-color: #2ecc71; box-shadow: 0 0 15px rgba(46, 204, 113, 0.2); }
 
@@ -89,7 +94,8 @@
             display: flex; 
             gap: 15px; 
             flex: 1; 
-            flex-direction: row;
+            min-height: 0; /* Viktigt för scroll */
+            overflow-y: auto; /* Tillåt scroll om korten blir höga */
         }
         .card { 
             flex: 1; padding: 15px; border-radius: 6px; 
@@ -171,9 +177,26 @@
         .overlay-screen h1 { margin: 0 0 20px 0; font-size: 2em; color: #61dafb; line-height: 1.2; }
         .overlay-screen p { font-size: 1.1em; line-height: 1.5; margin-bottom: 25px; color: #ccc; margin-left: auto; margin-right: auto; }
         
-        .btn-start, .btn-transform { width: 100%; max-width: 300px; padding: 18px; margin-top: 10px; font-size: 1.1em; }
+        .btn-start, .btn-transform, .btn-contact { width: 100%; max-width: 300px; padding: 18px; margin-top: 10px; font-size: 1.1em; }
         .btn-start { background: #3498db; box-shadow: 0 5px 0 #21618c; }
         .btn-transform { background: #9b59b6; box-shadow: 0 5px 0 #8e44ad; }
+        
+        /* XLENT Contact Button Style */
+        .btn-contact {
+            background: #e67e22; /* XLENT-aktig färg */
+            box-shadow: 0 5px 0 #d35400;
+            color: white;
+            font-weight: bold;
+            text-decoration: none; /* Tar bort understrykning på länken */
+            display: inline-block; /* Så den beter sig som en knapp */
+            cursor: pointer;
+            border-radius: 6px;
+            transition: transform 0.1s;
+        }
+        .btn-contact:active {
+            transform: translateY(3px);
+            box-shadow: none;
+        }
 
         /* SETUP SCREEN */
         .setup-container {
@@ -309,7 +332,7 @@
             <h1>INKÖPSANALYSEN 2025</h1>
             <p>
                 Du tar över en avdelning i kris. Leverantörsfakturorna stämmer inte överens med avtalspriserna och företaget läcker pengar.
-                Ditt uppdrag är att granska allt manuellt för att hitta avvikelserna.
+                Ditt uppdrag är att granska allt manuellt.
             </p>
             <p>
                 Jämför fakturorna från 2025, en och en, och avgör om kostnaderna stämmer överens med avtalspriserna och ska attesteras eller om fakturan ska bestridas.
@@ -396,10 +419,10 @@
                 Inga gissningar. Inga missade fakturor. Full kontroll från dag ett.
                 <br><br>
                 <strong style="color:#fff; font-size:1.1em;">Vi på XLENT kan hjälpa dig och din organisation med detta.</strong><br>
-                Vi har tagit fram en lösning i två steg där det första steget är att göra en grundlig inköpsanalys. Genom den får ni en tydlig bild av nuläget, konkreta besparingsförslag och ett mandat att gå vidare till steg 2, förändringsarbetet med er inköpsprocess.<br>
-                Hör av dig till din kontakt så bokar vi ett möte och berättar mer.
+                Vi har tagit fram en lösning i två steg där det första steget är att göra en grundlig inköpsanalys. Genom den får ni en tydlig bild av nuläget, konkreta besparingsförslag och ett mandat att gå vidare till steg 2, förändringsarbetet med er inköpsprocess.
             </p>
 
+            <a href="mailto:gustav.wendefors@xlent.se?subject=Information%20om%20inköpsanalys" class="btn-contact">✉️ Kontakta XLENT</a>
             <button class="btn-start" onclick="location.reload()">🔄 Starta om demon</button>
         </div>
     </div>
